@@ -68,10 +68,6 @@ const EventsPage = () => {
       {/* ── Hero ── */}
       <section className="events-hero">
         <div className="hero-inner">
-          <div className="hero-eyebrow">
-            <span className="hero-eyebrow-icon" />
-            The premium ticketing experience
-          </div>
           <h1 className="hero-title">
             Discover<br />
             <span className="hero-title-accent">Extraordinary</span>
