@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'https://api-sort-my-scene.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_BASE,

@@ -12,7 +12,7 @@ const myTicketsRoutes = require('./routes/myTickets');
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'https://sortmyscene-sandy.vercel.app'],
   credentials: true
 }));
 app.use(express.json());
