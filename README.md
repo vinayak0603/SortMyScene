@@ -89,12 +89,22 @@ POST /api/bookings:
   2. Find reservation WHERE _id = ? AND userId = ? AND status = 'active'
   3. Check expiresAt < now → 410 Expired
   4. Verify seats still have status = 'reserved' AND reservationId = reservation._id
-  5. Update seats to 'booked'
-  6. Mark reservation as 'completed'
-  7. Commit transaction
+  5. Fetch associated Event details to determine seat price
+  6. Generate unique alphanumeric booking reference code (e.g., SMS-XXXX-YYYY)
+  7. Create permanent Ticket document with pricePaid, bookingReference, and status = 'booked'
+  8. Update seats to 'booked' and release reservationId
+  9. Delete the temporary Reservation document (to prevent auto-expiration/TTL deletion)
+  10. Commit transaction
 ```
 
 This ensures no two concurrent requests can book the same seat — only one transaction will succeed if there's a race condition.
+
+### Persistent Ticket Storage
+
+To prevent booked tickets from disappearing after the 10-minute reservation expiry (due to MongoDB TTL index deleting the Reservation document), we separate reservation logic from permanent ticket bookings:
+- **Reservations (`Reservation` model)** are temporary holdings (10-minute lifetime). They are auto-cleaned by the MongoDB TTL index when expired.
+- **Tickets (`Ticket` model)** are permanent records created upon booking confirmation. Once a ticket is successfully created and seats are booked, the corresponding reservation is deleted so it is not impacted by the TTL index or auto-expire checks.
+- When retrieving a user's tickets, the system fetches active/expired entries from the `Reservation` model and permanent entries from the `Ticket` model, merging them seamlessly into a single list for the frontend.
 
 ### Reservation Expiry
 

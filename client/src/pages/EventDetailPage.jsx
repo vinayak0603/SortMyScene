@@ -251,7 +251,7 @@ const EventDetailPage = () => {
             ))}
           </div>
           <p className="booking-ref">
-            Reference ID: <code>{bookingResult.reservationId}</code>
+            Booking Reference: <code>{bookingResult.bookingReference || bookingResult.reservationId}</code>
           </p>
           <button
             className="btn-primary btn-lg"

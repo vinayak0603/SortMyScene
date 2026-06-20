@@ -124,9 +124,17 @@ const TicketCard = ({ ticket, onConfirm, confirming }) => {
         </div>
 
         {isCompleted && (
-          <p className="mt-booked-at">
-            Booked on {formatBooked(ticket.updatedAt)}
-          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <p className="mt-booked-at">
+              Booked on {formatBooked(ticket.updatedAt)}
+            </p>
+            {ticket.bookingReference && (
+              <div className="mt-booking-ref-row" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-dim)' }}>
+                <span>Booking Ref:</span>
+                <code style={{ color: 'var(--p-300)', background: 'rgba(124,58,237,.1)', padding: '2px 6px', borderRadius: '4px' }}>{ticket.bookingReference}</code>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

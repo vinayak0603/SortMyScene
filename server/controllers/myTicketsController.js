@@ -1,6 +1,7 @@
 const Reservation = require('../models/Reservation');
 const Seat = require('../models/Seat');
 const Event = require('../models/Event');
+const Ticket = require('../models/Ticket');
 const mongoose = require('mongoose');
 
 // GET /api/my-tickets
@@ -36,26 +37,47 @@ const getMyTickets = async (req, res) => {
       );
     }
 
-    // Re-fetch after expiry updates
+    // Re-fetch reservations after expiry updates
     const updatedReservations = await Reservation.find({ userId })
       .sort({ createdAt: -1 })
       .lean();
 
-    // Attach event details to each reservation
-    const eventIds = [...new Set(updatedReservations.map(r => r.eventId.toString()))];
+    // Fetch permanent booked tickets
+    const bookedTickets = await Ticket.find({ userId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Compile event IDs from both reservations and tickets
+    const eventIds = [
+      ...new Set([
+        ...updatedReservations.map(r => r.eventId.toString()),
+        ...bookedTickets.map(t => t.eventId.toString())
+      ])
+    ];
+
+    // Fetch event details
     const events = await Event.find({ _id: { $in: eventIds } }).lean();
     const eventMap = {};
     events.forEach(e => { eventMap[e._id.toString()] = e; });
 
-    const tickets = updatedReservations.map(r => ({
+    // Populate events for active/expired reservations
+    const reservationsWithEvent = updatedReservations.map(r => ({
       ...r,
       event: eventMap[r.eventId.toString()] || null
     }));
 
+    // Populate events and map fields for booked tickets to match reservation structure
+    const bookedTicketsWithEvent = bookedTickets.map(t => ({
+      ...t,
+      status: 'completed', // Map 'booked' to 'completed' for frontend compatibility
+      event: eventMap[t.eventId.toString()] || null,
+      updatedAt: t.createdAt // Use creation time as booking confirmation time
+    }));
+
     // Split into categories
-    const active    = tickets.filter(t => t.status === 'active');
-    const booked    = tickets.filter(t => t.status === 'completed');
-    const expired   = tickets.filter(t => t.status === 'expired');
+    const active  = reservationsWithEvent.filter(r => r.status === 'active');
+    const expired = reservationsWithEvent.filter(r => r.status === 'expired');
+    const booked  = bookedTicketsWithEvent;
 
     res.json({ active, booked, expired });
   } catch (err) {
@@ -65,3 +87,4 @@ const getMyTickets = async (req, res) => {
 };
 
 module.exports = { getMyTickets };
+
